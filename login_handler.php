@@ -23,11 +23,17 @@ function verifierConnexion($username, $password) {
             
             if (password_verify($password, $admin['password'])) {
                 error_log("Mot de passe vérifié avec succès");
+
+                // Initialiser la session avec toutes les informations nécessaires
                 $_SESSION['admin_id'] = $admin['id'];
                 $_SESSION['admin_username'] = $admin['username'];
+                $_SESSION['admin_nom'] = $admin['nom'];
+                $_SESSION['admin_prenoms'] = $admin['prenoms'];
+                $_SESSION['admin_role'] = strtolower($admin['role']);
                 $_SESSION['is_logged'] = true;
                 $_SESSION['last_activity'] = time();
-                error_log("Session initialisée avec succès");
+
+                error_log("Session initialisée avec succès pour " . $admin['username']);
                 return true;
             } else {
                 error_log("Échec de la vérification du mot de passe");
