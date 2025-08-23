@@ -5,6 +5,11 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', 'php_errors.log');
 
+// Définir les en-têtes de sécurité
+header("X-Frame-Options: DENY");
+header("X-XSS-Protection: 1; mode=block");
+header("X-Content-Type-Options: nosniff");
+
 require_once 'config.php';
 
 // Gestion des erreurs de timeout
@@ -26,9 +31,6 @@ if (headers_sent($filename, $linenum)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <title>Login - Gestion des Congés</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for icons -->
