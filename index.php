@@ -14,9 +14,14 @@ require_once 'config.php';
 
 // Gestion des erreurs de timeout
 $timeout_username = '';
-if (isset($_GET['error']) && $_GET['error'] === 'timeout') {
-    $timeout_username = $_GET['username'] ?? '';
-    $error_message = "Votre session a expiré en raison d'une inactivité de 5 minutes. Veuillez vous reconnecter.";
+if (isset($_GET['error'])) {
+    $error_type = $_GET['error'];
+    if ($error_type === 'timeout') {
+        $timeout_username = $_GET['username'] ?? '';
+        $error_message = "Votre session a expiré en raison d'une inactivité de 5 minutes. Veuillez vous reconnecter.";
+    } elseif ($error_type === 'database_error' && isset($_GET['message'])) {
+        $error_message = htmlspecialchars(urldecode($_GET['message']));
+    }
 }
 
 // Vérifier si des données ont déjà été envoyées au navigateur

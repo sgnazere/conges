@@ -14,9 +14,16 @@ $license_check = checkLicense();
 if (!$license_check['valid']) {
     // Stocker le message d'erreur dans la session
     $_SESSION['license_error'] = $license_check['message'];
-    // Déconnecter l'utilisateur
-    session_destroy();
-    // Rediriger vers la page de connexion
+
+    // Déconnecter l'utilisateur en gardant le message d'erreur
+    unset($_SESSION['is_logged']);
+    unset($_SESSION['admin_id']);
+    unset($_SESSION['admin_username']);
+    unset($_SESSION['admin_nom']);
+    unset($_SESSION['admin_prenoms']);
+    unset($_SESSION['admin_role']);
+
+    // Rediriger vers la page de connexion pour afficher le message
     header('Location: index.php');
     exit();
 }
@@ -37,9 +44,10 @@ if (!isset($_SESSION['admin_nom']) || !isset($_SESSION['admin_prenoms']) || !iss
         }
     } catch(Exception $e) {
         error_log("Erreur lors de la récupération des informations de l'utilisateur : " . $e->getMessage());
-        // En cas d'erreur de base de données, déconnecter l'utilisateur
-        session_destroy();
-        header('Location: index.php?error=database_error');
+        // En cas d'erreur de base de données, déconnecter l'utilisateur et rediriger avec un message
+        session_unset(); // Vider la session
+        session_destroy(); // Détruire la session
+        header('Location: index.php?error=database_error&message=' . urlencode("Une erreur de base de données est survenue."));
         exit();
     }
 }
