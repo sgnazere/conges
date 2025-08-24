@@ -847,6 +847,38 @@ function calculerAnnees($date_embauche) {
             background-color: var(--warning);
             color: var(--text-primary);
         }
+
+        /* Styles pour l'infobulle */
+        .employee-tooltip {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 300px;
+            pointer-events: none; /* Empêche l'infobulle de capturer les événements de la souris */
+            font-size: 0.9rem;
+            line-height: 1.4;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .employee-tooltip h5 {
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #555;
+            font-size: 1rem;
+            color: var(--primary-light);
+        }
+
+        .employee-tooltip p {
+            margin: 5px 0;
+        }
+
+        .employee-tooltip strong {
+            color: var(--primary-light);
+        }
     </style>
     <!-- Ajout des liens CSS et JS pour DataTables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
@@ -996,7 +1028,10 @@ function calculerAnnees($date_embauche) {
                         </thead>
                         <tbody>
                             <?php foreach ($employes as $employe): ?>
-                                <tr>
+                                <tr data-date-naissance="<?php echo htmlspecialchars($employe['date_naissance']); ?>"
+                                    data-date-embauche="<?php echo htmlspecialchars($employe['date_embauche']); ?>"
+                                    data-numero-cnps="<?php echo htmlspecialchars($employe['numero_cnps']); ?>"
+                                    data-numero-urgence="<?php echo htmlspecialchars($employe['numero_urgence']); ?>">
                                     <td><?php echo htmlspecialchars($employe['nom']); ?></td>
                                     <td><?php echo htmlspecialchars($employe['prenoms']); ?></td>
                                     <td><?php echo htmlspecialchars($employe['telephone']); ?></td>
@@ -1429,6 +1464,63 @@ function calculerAnnees($date_embauche) {
         function filterByProject(projet) {
             window.location.href = '?projet=' + encodeURIComponent(projet);
         }
+
+        // Gestion de l'infobulle au survol
+        var tooltip;
+        $('.employee-table tbody').on('mouseenter', 'tr', function(e) {
+            var $row = $(this);
+            var dateNaissance = $row.data('date-naissance');
+            var dateEmbauche = $row.data('date-embauche');
+            var numeroCnps = $row.data('numero-cnps');
+            var numeroUrgence = $row.data('numero-urgence');
+
+            // Formatter les dates si elles existent
+            var formattedDateNaissance = dateNaissance ? new Date(dateNaissance).toLocaleDateString('fr-FR') : 'N/A';
+            var formattedDateEmbauche = dateEmbauche ? new Date(dateEmbauche).toLocaleDateString('fr-FR') : 'N/A';
+
+            var tooltipContent = '<h5>Informations supplémentaires</h5>' +
+                '<p><strong>Date de naissance:</strong> ' + formattedDateNaissance + '</p>' +
+                '<p><strong>Date d\'embauche:</strong> ' + formattedDateEmbauche + '</p>' +
+                '<p><strong>Numéro CNPS:</strong> ' + (numeroCnps || 'N/A') + '</p>' +
+                '<p><strong>Numéro d\'urgence:</strong> ' + (numeroUrgence || 'N/A') + '</p>';
+
+            tooltip = $('<div class="employee-tooltip"></div>').html(tooltipContent).appendTo('body');
+
+            // Positionner l'infobulle
+            var top = e.pageY + 15;
+            var left = e.pageX + 15;
+
+            // Ajuster si l'infobulle dépasse de l'écran
+            if (left + tooltip.outerWidth() > $(window).width()) {
+                left = e.pageX - tooltip.outerWidth() - 15;
+            }
+            if (top + tooltip.outerHeight() > $(window).height()) {
+                top = e.pageY - tooltip.outerHeight() - 15;
+            }
+
+            tooltip.css({ top: top, left: left }).fadeIn(200);
+
+        }).on('mouseleave', 'tr', function() {
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }).on('mousemove', 'tr', function(e) {
+            if (tooltip) {
+                // Positionner l'infobulle
+                var top = e.pageY + 15;
+                var left = e.pageX + 15;
+
+                // Ajuster si l'infobulle dépasse de l'écran
+                if (left + tooltip.outerWidth() > $(window).width()) {
+                    left = e.pageX - tooltip.outerWidth() - 15;
+                }
+                if (top + tooltip.outerHeight() > $(window).height()) {
+                    top = e.pageY - tooltip.outerHeight() - 15;
+                }
+
+                tooltip.css({ top: top, left: left });
+            }
+        });
     });
     </script>
 </body>
