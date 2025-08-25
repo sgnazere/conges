@@ -35,10 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($_POST['action']) {
             case 'ajouter':
                 try {
-                    $query = $db->prepare("INSERT INTO employees (nom, prenoms, email, date_naissance, poste, projet, date_embauche, telephone, numero_cnps, type_contrat, numero_urgence) VALUES (:nom, :prenoms, :email, :date_naissance, :poste, :projet, :date_embauche, :telephone, :numero_cnps, :type_contrat, :numero_urgence)");
+                    $query = $db->prepare("INSERT INTO employees (nom, prenoms, sexe, adresse, email, date_naissance, poste, projet, date_embauche, telephone, numero_cnps, type_contrat, numero_urgence) VALUES (:nom, :prenoms, :sexe, :adresse, :email, :date_naissance, :poste, :projet, :date_embauche, :telephone, :numero_cnps, :type_contrat, :numero_urgence)");
                     $query->execute([
                         'nom' => $_POST['nom'],
                         'prenoms' => $_POST['prenoms'],
+                        'sexe' => $_POST['sexe'],
+                        'adresse' => $_POST['adresse'],
                         'email' => $_POST['email'],
                         'date_naissance' => $_POST['date_naissance'],
                         'poste' => $_POST['poste'],
@@ -63,11 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'modifier':
                 try {
-                    $query = $db->prepare("UPDATE employees SET nom = :nom, prenoms = :prenoms, email = :email, date_naissance = :date_naissance, poste = :poste, projet = :projet, date_embauche = :date_embauche, telephone = :telephone, numero_cnps = :numero_cnps, type_contrat = :type_contrat, numero_urgence = :numero_urgence WHERE id = :id");
+                    $query = $db->prepare("UPDATE employees SET nom = :nom, prenoms = :prenoms, sexe = :sexe, adresse = :adresse, email = :email, date_naissance = :date_naissance, poste = :poste, projet = :projet, date_embauche = :date_embauche, telephone = :telephone, numero_cnps = :numero_cnps, type_contrat = :type_contrat, numero_urgence = :numero_urgence WHERE id = :id");
                     $query->execute([
                         'id' => $_POST['id'],
                         'nom' => $_POST['nom'],
                         'prenoms' => $_POST['prenoms'],
+                        'sexe' => $_POST['sexe'],
+                        'adresse' => $_POST['adresse'],
                         'email' => $_POST['email'],
                         'date_naissance' => $_POST['date_naissance'],
                         'poste' => $_POST['poste'],
@@ -937,6 +941,18 @@ function calculerAnnees($date_embauche) {
                             <input type="text" name="prenoms" id="prenoms" required>
                         </div>
                         <div class="form-group">
+                            <label for="sexe">Sexe</label>
+                            <select name="sexe" id="sexe" required>
+                                <option value="">Sélectionnez le sexe</option>
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="adresse">Adresse</label>
+                            <input type="text" name="adresse" id="adresse">
+                        </div>
+                        <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" id="email">
                         </div>
@@ -1028,7 +1044,9 @@ function calculerAnnees($date_embauche) {
                         </thead>
                         <tbody>
                             <?php foreach ($employes as $employe): ?>
-                                <tr data-date-naissance="<?php echo htmlspecialchars($employe['date_naissance']); ?>"
+                                <tr data-sexe="<?php echo htmlspecialchars($employe['sexe']); ?>"
+                                    data-adresse="<?php echo htmlspecialchars($employe['adresse']); ?>"
+                                    data-date-naissance="<?php echo htmlspecialchars($employe['date_naissance']); ?>"
                                     data-date-embauche="<?php echo htmlspecialchars($employe['date_embauche']); ?>"
                                     data-numero-cnps="<?php echo htmlspecialchars($employe['numero_cnps']); ?>"
                                     data-numero-urgence="<?php echo htmlspecialchars($employe['numero_urgence']); ?>">
@@ -1204,71 +1222,8 @@ function calculerAnnees($date_embauche) {
         }
 
         function reloadEmployeeList() {
-            $.ajax({
-                url: 'get_employees_list.php',
-                method: 'GET',
-                data: { 
-                    draw: 1,
-                    length: $('.employee-table').DataTable().page.len(),
-                    start: 0
-                },
-                success: function(response) {
-                    if (response.error) {
-                        showMessage(response.error, 'error');
-                        return;
-                    }
-                    
-                    // Détruire et réinitialiser la table
-                    var table = $('.employee-table').DataTable();
-                    table.destroy();
-                    
-                    // Vider et remplir le tbody avec les nouvelles données
-                    var tbody = $('.employee-table tbody');
-                    tbody.empty();
-                    
-                    response.data.forEach(function(row) {
-                        tbody.append(
-                            '<tr>' +
-                            '<td>' + row[0] + '</td>' + // nom
-                            '<td>' + row[1] + '</td>' + // prenoms
-                            '<td>' + row[2] + '</td>' + // telephone
-                            '<td>' + row[3] + '</td>' + // email
-                            '<td>' + row[4] + '</td>' + // projet
-                            '<td>' + row[5] + '</td>' + // type_contrat
-                            '<td>' + row[6] + '</td>' + // poste
-                            '<td>' + row[10] + '</td>' + // actions
-                            '</tr>'
-                        );
-                    });
-                    
-                    // Réinitialiser DataTables
-                    $('.employee-table').DataTable({
-                        responsive: true,
-                        language: {
-                            url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json'
-                        },
-                        pageLength: 10,
-                        order: [[0, 'asc']],
-                        scrollX: false,
-                        columnDefs: [
-                            {
-                                targets: -1,
-                                orderable: false,
-                                searchable: false
-                            }
-                        ],
-                        drawCallback: function() {
-                            initializeActionButtons();
-                        }
-                    });
-                    
-                    // Mettre à jour le compteur d'employés
-                    $('.employee-count').text(response.recordsTotal + ' employé(s)');
-                },
-                error: function(xhr, status, error) {
-                    showMessage('Erreur lors du rechargement de la liste: ' + error, 'error');
-                }
-            });
+            // Recharger la page pour afficher les modifications
+            location.reload();
         }
 
         function updateProjectFilter(employees) {
@@ -1330,6 +1285,8 @@ function calculerAnnees($date_embauche) {
                     // Remplir le formulaire avec les données
                     $('#nom').val(employee.nom);
                     $('#prenoms').val(employee.prenoms);
+                    $('#sexe').val(employee.sexe);
+                    $('#adresse').val(employee.adresse);
                     $('#email').val(employee.email);
                     $('#telephone').val(employee.telephone);
                     $('#numero_urgence').val(employee.numero_urgence);
@@ -1469,6 +1426,8 @@ function calculerAnnees($date_embauche) {
         var tooltip;
         $('.employee-table tbody').on('mouseenter', 'tr', function(e) {
             var $row = $(this);
+            var sexe = $row.data('sexe');
+            var adresse = $row.data('adresse');
             var dateNaissance = $row.data('date-naissance');
             var dateEmbauche = $row.data('date-embauche');
             var numeroCnps = $row.data('numero-cnps');
@@ -1479,6 +1438,8 @@ function calculerAnnees($date_embauche) {
             var formattedDateEmbauche = dateEmbauche ? new Date(dateEmbauche).toLocaleDateString('fr-FR') : 'N/A';
 
             var tooltipContent = '<h5>Informations supplémentaires</h5>' +
+                '<p><strong>Sexe:</strong> ' + (sexe || 'N/A') + '</p>' +
+                '<p><strong>Adresse:</strong> ' + (adresse || 'N/A') + '</p>' +
                 '<p><strong>Date de naissance:</strong> ' + formattedDateNaissance + '</p>' +
                 '<p><strong>Date d\'embauche:</strong> ' + formattedDateEmbauche + '</p>' +
                 '<p><strong>Numéro CNPS:</strong> ' + (numeroCnps || 'N/A') + '</p>' +

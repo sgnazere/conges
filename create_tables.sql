@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS employees (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenoms VARCHAR(100) NOT NULL,
+    sexe ENUM('Homme', 'Femme') NOT NULL,
+    adresse VARCHAR(255),
     email VARCHAR(100),
     date_naissance DATE NOT NULL,
     poste VARCHAR(100) NOT NULL,
