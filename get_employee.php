@@ -33,12 +33,6 @@ try {
         $employee['date_embauche'] = date('Y-m-d', strtotime($employee['date_embauche']));
     }
 
-    // Récupérer le solde de congés
-    $query = $db->prepare("SELECT solde_conges FROM employees WHERE id = ?");
-    $query->execute([$_GET['id']]);
-    $solde = $query->fetchColumn();
-    $employee['solde_conges'] = $solde ?: 0;
-
     echo json_encode([
         'success' => true,
         'data' => $employee
